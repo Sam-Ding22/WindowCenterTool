@@ -1,0 +1,13 @@
+bin/
+obj/
+dist/
+publish/
+*.user
+*.suo
+*.pdb
+*.cache
+.vs/
+.trae/
+.workbuddy/
+Thumbs.db
+Desktop.ini

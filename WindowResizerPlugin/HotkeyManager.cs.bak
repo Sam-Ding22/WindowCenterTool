@@ -1,0 +1,105 @@
+using System;
+using System.Threading;
+using System.Runtime.InteropServices;
+
+namespace WindowResizerPlugin
+{
+    public class HotkeyManager
+    {
+        private const int HOTKEY_ID = 1;
+        private const uint VK_F12 = 0x7B; // 代表F12键
+        private IntPtr _windowHandle;
+        private Thread? _messageLoopThread;
+        private bool _isRunning;
+        public event EventHandler? HotkeyPressed;
+
+        public bool RegisterHotkey(IntPtr windowHandle)
+        {
+            _windowHandle = CreateHiddenWindow();
+            if (_windowHandle == IntPtr.Zero)
+            {
+                return false;
+            }
+            
+            // 尝试注册Ctrl+Alt+F12快捷键
+            bool success = WindowsApiWrapper.RegisterHotKey(
+                _windowHandle,
+                HOTKEY_ID,
+                WindowsApiWrapper.MOD_CONTROL | WindowsApiWrapper.MOD_ALT,
+                VK_F12
+            );
+
+            if (success)
+            {
+                _isRunning = true;
+                _messageLoopThread = new Thread(MessageLoop);
+                _messageLoopThread.IsBackground = true;
+                _messageLoopThread.Start();
+            }
+
+            return success;
+        }
+
+        public void UnregisterHotkey()
+        {
+            _isRunning = false;
+            WindowsApiWrapper.UnregisterHotKey(_windowHandle, HOTKEY_ID);
+            _messageLoopThread?.Join();
+        }
+
+        private void MessageLoop()
+        {
+            Console.WriteLine("消息循环启动，开始监听热键消息...");
+            while (_isRunning)
+            {
+                if (WindowsApiWrapper.PeekMessage(out WindowsApiWrapper.MSG msg, _windowHandle, 0, 0, 1))
+                {
+                    Console.WriteLine($"收到消息: {msg.message}, wParam: {msg.wParam.ToInt32()}");
+                    if (msg.message == WindowsApiWrapper.WM_HOTKEY && msg.wParam.ToInt32() == HOTKEY_ID)
+                    {
+                        Console.WriteLine("收到热键消息！触发事件...");
+                        HotkeyPressed?.Invoke(this, EventArgs.Empty);
+                    }
+                }
+                else
+                {
+                    // 使用更高效的等待方式，减少CPU使用率
+                    Thread.Sleep(50);
+                }
+            }
+            Console.WriteLine("消息循环结束");
+        }
+
+        private IntPtr CreateHiddenWindow()
+        {
+            string className = "HotkeyMessageWindow";
+            string windowName = "Hotkey Message Window";
+
+            // 注册窗口类
+            WindowsApiWrapper.WNDPROC wndProc = new WindowsApiWrapper.WNDPROC(WindowsApiWrapper.DefWindowProc);
+            WindowsApiWrapper.WNDCLASS wc = new WindowsApiWrapper.WNDCLASS
+            {
+                lpfnWndProc = Marshal.GetFunctionPointerForDelegate(wndProc),
+                hInstance = System.Diagnostics.Process.GetCurrentProcess().Handle,
+                lpszClassName = className
+            };
+
+            WindowsApiWrapper.RegisterClass(ref wc);
+
+            // 创建隐藏窗口
+            IntPtr hWnd = WindowsApiWrapper.CreateWindowEx(
+                0,
+                className,
+                windowName,
+                0, // 隐藏窗口
+                0, 0, 0, 0,
+                IntPtr.Zero,
+                IntPtr.Zero,
+                wc.hInstance,
+                IntPtr.Zero
+            );
+
+            return hWnd;
+        }
+    }
+}
