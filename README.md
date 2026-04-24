@@ -1,4 +1,4 @@
-# 窗口居中工具 / Window Centering Tool
+# 窗口居中工具 / Window Center Tool
 
 一个为 Windows 设计的轻量级托盘常驻工具，用全局快捷键快速把当前窗口居中或贴靠到左右两侧。  
 A lightweight Windows tray utility that uses global hotkeys to center the current window or dock it to the left or right edge.

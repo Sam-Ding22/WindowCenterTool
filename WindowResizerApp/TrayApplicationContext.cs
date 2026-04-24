@@ -26,16 +26,16 @@ internal sealed class TrayApplicationContext : ApplicationContext
         _notifyIcon = new NotifyIcon
         {
             Icon = SystemIcons.Application,
-            Text = "窗口居中工具 / Window Centering Tool",
+            Text = "窗口居中工具 / Window Center Tool",
             Visible = true,
             ContextMenuStrip = BuildMenu()
         };
 
-        _notifyIcon.DoubleClick += (_, _) => ShowStatus("窗口居中工具正在托盘运行。\nWindow Centering Tool is running in the tray.");
+        _notifyIcon.DoubleClick += (_, _) => ShowStatus("窗口居中工具正在托盘运行。\nWindow Center Tool is running in the tray.");
 
         ApplyStartupPreference();
         RegisterHotkeys();
-        ShowStatus("Window Resizer is running in the tray.");
+        ShowStatus("窗口居中工具正在托盘运行。\nWindow Center Tool is running in the tray.");
     }
 
     protected override void ExitThreadCore()
@@ -173,7 +173,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
             return;
         }
 
-        _notifyIcon.BalloonTipTitle = "窗口居中工具 / Window Centering Tool";
+        _notifyIcon.BalloonTipTitle = "窗口居中工具 / Window Center Tool";
         _notifyIcon.BalloonTipText = message;
         _notifyIcon.ShowBalloonTip(2000);
     }

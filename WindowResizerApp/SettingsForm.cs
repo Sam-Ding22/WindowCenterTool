@@ -15,7 +15,7 @@ internal sealed class SettingsForm : Form
 
     public SettingsForm(AppSettings settings)
     {
-        Text = "窗口居中工具 / Window Centering Tool";
+        Text = "窗口居中工具 / Window Center Tool";
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
