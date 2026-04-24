@@ -3,6 +3,7 @@ obj/
 dist/
 publish/
 installer/
+publish.ps1
 *.user
 *.suo
 *.pdb
