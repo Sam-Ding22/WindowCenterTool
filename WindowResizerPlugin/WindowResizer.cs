@@ -21,6 +21,7 @@ public class WindowResizer : IWindowResizerPlugin
     private static extern bool GetCursorPos(out WindowsApiWrapper.POINT point);
 
     private readonly Dictionary<nint, ManagedWindowState> _windowStates = new();
+    private double _centerWidthPercent = 0.5;
 
     public void ResizeWindow(IntPtr windowHandle, int width, int height)
     {
@@ -96,16 +97,25 @@ public class WindowResizer : IWindowResizerPlugin
         var state = GetOrCreateState(windowHandle, workArea);
 
         int targetWidth;
-        if (state.HasManagedBefore || IsWindowFullHeight(windowHandle))
+        if (state.HasManagedBefore)
         {
+            // 已管理过：按窗口当前宽度居中，尊重手动调整
             targetWidth = ClampWidth(rect.Width, workArea);
         }
         else
         {
-            targetWidth = workArea.Width / 2;
+            // 首次管理：使用全局居中比例
+            targetWidth = (int)(workArea.Width * _centerWidthPercent);
         }
 
         MoveToCenteredFullHeight(windowHandle, workArea, targetWidth);
+
+        // 重新获取实际宽度，更新 _centerWidthPercent 供左右窗口使用
+        if (TryGetWindowRect(windowHandle, out var actualRect))
+        {
+            _centerWidthPercent = Math.Max(0.1, Math.Min(0.9, actualRect.Width / (double)workArea.Width));
+        }
+
         state.PreferredWidth = targetWidth;
         state.HasManagedBefore = true;
     }
@@ -143,7 +153,7 @@ public class WindowResizer : IWindowResizerPlugin
         }
 
         var workArea = GetWorkArea(windowHandle);
-        var width = ClampWidth(rect.Width, workArea);
+        var width = (int)(workArea.Width * (1 - _centerWidthPercent) / 2);
         WindowsApiWrapper.MoveWindow(windowHandle, workArea.Left, workArea.Top, width, workArea.Height, true);
         UpdateState(windowHandle, width, workArea);
     }
@@ -156,7 +166,7 @@ public class WindowResizer : IWindowResizerPlugin
         }
 
         var workArea = GetWorkArea(windowHandle);
-        var width = ClampWidth(rect.Width, workArea);
+        var width = (int)(workArea.Width * (1 - _centerWidthPercent) / 2);
         var x = workArea.Right - width;
         WindowsApiWrapper.MoveWindow(windowHandle, x, workArea.Top, width, workArea.Height, true);
         UpdateState(windowHandle, width, workArea);
